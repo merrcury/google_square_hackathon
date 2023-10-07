@@ -100,6 +100,9 @@ def chat(message: str = Form(...), history: list = Form(...)):
     # Need Buffer size check on history (Summarization may help)
     # Use tools for Ingredients and Menu
 
+    ingredients = read_from_postgres()
+    menu = read_menu_from_square_catalog()
+
     if "PAYMENT" in message or "Payment" in message or "payment" in message or "Pay" in message or "pay" in message:
         return {"response": "Please pay for your order", "history": history, "stop": True, "payment": True}
 
