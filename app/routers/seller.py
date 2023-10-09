@@ -2,7 +2,12 @@ import logging
 
 from fastapi import APIRouter, Form, HTTPException
 from langchain.prompts import PromptTemplate
+from langchain.utilities.dalle_image_generator import DallEAPIWrapper
+from langchain.chains import LLMChain
+
 from settings.config import Config
+from typing import Optional
+
 
 # logger
 logging.basicConfig(level=logging.INFO)
@@ -11,8 +16,10 @@ logger = logging.getLogger(__name__)
 config = Config.get_instance()
 conn = config.get_postgres_connection()
 llm = config.get_vertex_ai_connection()
+dalle_llm = config.get_open_ai_connection()
 
 router = APIRouter()
+
 
 @router.post("/recommend_menu", tags=["seller"])
 def recommend_menu(preferred_cuisine: str = Form(...), prep_time_breakfast: str = Form(...),
@@ -26,6 +33,9 @@ def recommend_menu(preferred_cuisine: str = Form(...), prep_time_breakfast: str 
     :param prep_time_breakfast:
     :param prep_time_lunch:
     :param prep_time_dinner:
+    :param cook_time_breakfast:
+    :param cook_time_lunch:
+    :param cook_time_dinner:
     :return: Detailed Menu JSON
     """
     logger.info(f"Reading ingredients from Ingredient table of postgres")
@@ -123,4 +133,28 @@ def reengineer_dish(dish_name: str = Form(...), preferred_cuisine: str = Form(..
         return chain.invoke({'dish_name': dish_name, 'preferred_cuisine': preferred_cuisine})
     except Exception as e:
         logger.exception(f"An Exception Occurred while reengineering dish using Vertex AI --> {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/catalog_image_generator")
+def catalog_image_generator(dish_name: str = Form(...), image_type: Optional = Form(None)):
+    """
+    Generate image for the dish
+    :param dish_name:
+    :param image_type:
+    :return:
+    """
+    image_type = image_type or "realistic"
+    template = f""" Context: You are an AI bot responsible for Image generation of dishes in a Restaraunt. 
+    TASK: You are given a dish {dish_name}. Please generate a Prompt to generate {image_type}, well-plated, mouth-watering and tempting image for the dish to display the serving suggestions.
+    Answer: Provide the Prompt 
+    """
+    prompt = PromptTemplate.from_template(template)
+    chain = LLMChain(prompt=prompt, llm=dalle_llm)
+    try:
+        image_url = DallEAPIWrapper().run(chain.run({'dish_name': dish_name, 'image_type': image_type}))
+        logger.info(f"Image generated successfully")
+        return {"image_url": image_url}
+    except Exception as e:
+        logger.exception(f"An Exception Occurred while generating image using Open AI --> {e}")
         raise HTTPException(status_code=500, detail=str(e))
