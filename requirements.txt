@@ -10,3 +10,5 @@ python-multipart==0.0.6
 squareup==31.0.0.20230925
 uvicorn==0.23.2
 wheel==0.38.4
+openai==0.28.1
+
