@@ -5,7 +5,7 @@ import logging
 from fastapi import Form, HTTPException
 from langchain.prompts import PromptTemplate
 
-from settings.config import Config
+from ..settings.config import Config
 
 # logger
 logging.basicConfig(level=logging.INFO)

@@ -4,7 +4,7 @@ import logging
 import json
 from fastapi import APIRouter, Form, HTTPException
 
-from settings.config import Config
+from ..settings.config import Config
 
 # logger
 logging.basicConfig(level=logging.INFO)
