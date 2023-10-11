@@ -35,7 +35,7 @@ def read_from_postgres():
         logger.info(f"Read from Postgres")
         for row in rows:
             ingredient = {'name': row[2], 'quantity': row[6], 'unit': row[7], 'shelf_life_days': row[5],
-                          'ingredient_type': row[3], 'ingredient_sub_type': row[4], 'unit_price': row[8]}
+                          'ingredient_type': row[3], 'ingredient_sub_type': row[4], 'unitprice': row[8]}
             ingredients.append(ingredient)
         return ingredients
     except Exception as e:
