@@ -16,10 +16,11 @@ config = Config.get_instance()
 square_client, square_location_id = config.get_square_connection()
 
 @router.post("/create")
-def create_order_object(orders: dict = Form(...), ):
+def create_order_object(orders: list = Form(...), ):
     """
     Create a new order object
-    :param orders: Contains the order details in the format {"catalog_object_id", "quantity"}
+    Comes from Order summary API
+    :param orders: Contains the order details in the format [{"dish name": Pizza, "quantity": 1, "base price" :{ "amount": 100, "currency": "USD" }}, {"dish name": Burger, "quantity": 2, "base price" :{ "amount": 50, "currency": "USD" }}]
     :return:
     """
     result = square_client.orders.create_order(
@@ -27,14 +28,14 @@ def create_order_object(orders: dict = Form(...), ):
             "order": {
                 "location_id": square_location_id,
                 "reference_id": str(uuid.uuid4()),
-                "line_items": [
+                "line_items":
                     orders
-                ],
+                ,
                 "taxes": [
                     {
                         "uid": "state-sales-tax",
                         "name": "State Sales Tax",
-                        "percentage": "9",
+                        "percentage": "10",
                         "scope": "ORDER"
                     }
                 ],

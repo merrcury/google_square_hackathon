@@ -23,7 +23,7 @@ square_client, square_location_id = config.get_square_connection()
 def read_from_postgres():
     """
     Used to Read from Postgres Table containing Ingredients
-    Read Ingredients from Postgres. Information is stored in a list of dictionaries. Each dictionary contains {name, quantity, unit, shelf_life_days, ingredient_type, ingredient_sub_type}
+    Read Ingredients from Postgres. Information is stored in a list of dictionaries. Each dictionary contains {name, quantity, unit, shelf_life_days, ingredient_type, ingredient_sub_type, unit_price}
     :return: List of Ingredients containing {name, quantity, unit, shelf_life_days, ingredient_type, ingredient_sub_type}
     """
     try:
@@ -35,7 +35,7 @@ def read_from_postgres():
         logger.info(f"Read from Postgres")
         for row in rows:
             ingredient = {'name': row[2], 'quantity': row[6], 'unit': row[7], 'shelf_life_days': row[5],
-                          'ingredient_type': row[3], 'ingredient_sub_type': row[4]}
+                          'ingredient_type': row[3], 'ingredient_sub_type': row[4], 'unit_price': row[8]}
             ingredients.append(ingredient)
         return ingredients
     except Exception as e:
@@ -111,12 +111,12 @@ def chat(message: str = Form(...), history: list = Form(...)):
 
     else:
 
-        template = f""" Context: You are a customer service agent for a restaurant. You are chatting with a customer who wants to order food. Here is the history of chat you had with the customer: {history}, now the customer is saying {message}. Please respond to the customer in poliet manner. In case there is no history of chat, just respond to the customer current message.
+        template = """ Context: You are a customer service agent for a restaurant. You are chatting with a customer who wants to order food. Here is the history of chat you had with the customer: {history}, now the customer is saying {message}. Please respond to the customer in poliet manner. In case there is no history of chat, just respond to the customer current message.
         Task: Take Customer Order
         Order: Ask Customer for Dish from Menu, Serve Size, Customization for all orders
         Answer: Just provide the response to the customer. For example: Hi, I am sorry for the inconvenience. I will check with the chef and get back to you.
-        Menu includes {menu}
-        Ingredients include {ingredients}
+        Menu includes {menu} along with dish price
+        Ingredients include {ingredients} 
         Not in Menu: If Customer asks for something not in Menu, say that it is not available.
         Customization: You can customize the menu as per customer requirement, keeping in Mind the Ingredients. For example: I want to order a pizza with extra cheese and no onion. 
         No Customization: If no customization is possible due to lack of Ingredients, just say that customization is not possible.
@@ -124,6 +124,9 @@ def chat(message: str = Form(...), history: list = Form(...)):
         STOP EXAMPLE: "STOPPING CHAT - Thank you for your order. Your order will be delivered in few minutes. Have a nice day."
         Continue: If Customer wants to order more, you can continue the chat by saying: What else would you like to order?
         Constraints: You can only use Ingredients available in the restaurant for customization. Customer can only order from Menu. Customer can only order one serve size at a time. 
+        PRICING: Once a customer is done customising and finalizing the dish, estimate the price, based on Menu provided, serve size and quantity. Do not consider Individual Ingredient Price.
+        Pricing Formula: Price = Dish Price * serve size * quantity so if unit price of pizza is 10$, 3 small pizza will be 10*3*1 = 30$, Large pizza is equivalent to 2 small pizza, so 1 large pizza will be 10*2*1 = 20$.
+        EXAMPLE: If a customer orders a pizza with extra cheese and no onion, you can say: Your order will cost you 10$.
         """
         prompt = PromptTemplate.from_template(template)
         chain = prompt | llm
@@ -158,26 +161,29 @@ def order_summarization(history: list = Form(...)):
     else:
 
         template = f"""
-        CONTEXT: You are a AI agent, who is going to read a conversation between a customer and a customer service agent regarding order at a restaurant {history}. You need to summarize the order keeping all the important points regdarding order, serve, quantity, Customizations from conversation intact in summary.
-        TASK: Summarize the order from the conversation between customer and customer service agent, while maintaining the context and important information regdarding order, serve, quantity, Customizations of the conversation.
-        ANSWER: Just provide the summary of the order in JSON Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1.
+        CONTEXT: You are a AI agent, who is going to read a conversation between a customer and a customer service agent regarding order at a restaurant {history}. You need to summarize the order keeping all the important points regdarding order, serve, quantity, Customizations and price of dish from conversation intact in summary.
+        TASK: Summarize the order from the conversation between customer and customer service agent, while maintaining the context and important information regdarding order, serve, quantity, Customizations and pricing of the conversation.
+        ANSWER: Just provide the summary of the order in JSON Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1, if there is no price use 5.
          For example: {
         "dishname1": {
         "serve": "Amount",
                 "quantity": "Amount",
-                "customization": "Customization"
+                "customization": "Customization",
+                "price": "Amount"
             }
         }
         EXAMPLE:
         {"Pizza": {
         "serve": "Large",
             "quantity": "1",
-            "customization": "Extra Cheese, No Onion"
+            "customization": "Extra Cheese, No Onion",
+            "price": "10"
         },
         "Burger": {
         "serve": "Medium",
             "quantity": "2",
-            "customization": None
+            "customization": None,
+            "price": "5"
         }}
         """
 
