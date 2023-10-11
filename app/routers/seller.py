@@ -153,6 +153,7 @@ def get_ingredient_summary(ingredient_name: Optional[str] = Form(None)):
             ingredient['shelf_life_days'] = row[5]
             ingredient['ingredient_type'] = row[3]
             ingredient['ingredient_sub_type'] = row[4]
+            ingredient['unitprice'] = row[8]
             ingredients.append(ingredient)
         logger.info(f"Read ingredients from Postgres, Summarizing")
 
