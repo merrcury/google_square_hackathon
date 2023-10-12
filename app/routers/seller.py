@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 from langchain.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain.chains import LLMChain
 
-from settings.config import Config
+from ..settings.config import Config
 from typing import Optional
 
 
@@ -207,7 +207,7 @@ def reengineer_dish(dish_name: str = Form(...), preferred_cuisine: str = Form(..
 
 
 @router.post("/catalog_image_generator")
-def catalog_image_generator(dish_name: str = Form(...), image_type: Optional = Form(None)):
+def catalog_image_generator(dish_name: str = Form(...), image_type: Optional[str] = Form(None)):
     """
     Generate image for the dish
     :param dish_name:

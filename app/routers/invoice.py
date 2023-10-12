@@ -4,7 +4,7 @@ import logging
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from typing import Optional
 
-from settings.config import Config
+from ..settings.config import Config
 import datetime
 
 # logger
