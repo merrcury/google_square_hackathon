@@ -1,11 +1,11 @@
 import uuid
 
 import logging
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException
-from typing import Optional
+from fastapi import APIRouter, Form, HTTPException, Header
+from typing import Annotated, Union
 
 from ..settings.config import Config
-import datetime
+from ..utils.square_payments import get_square_connection
 
 # logger
 logging.basicConfig(level=logging.INFO)
@@ -13,16 +13,16 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 config = Config.get_instance()
-square_client, square_location_id = config.get_square_connection()
 
 @router.post("/create")
-def create_order_object(orders: list = Form(...), ):
+def create_order_object(access_token: Annotated[Union[str, None], Header()], orders: list = Form(...), ):
     """
     Create a new order object
     Comes from Order summary API
     :param orders: Contains the order details in the format [{"dish name": Pizza, "quantity": 1, "base price" :{ "amount": 100, "currency": "USD" }}, {"dish name": Burger, "quantity": 2, "base price" :{ "amount": 50, "currency": "USD" }}]
     :return:
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.orders.create_order(
         body={
             "order": {
@@ -53,12 +53,13 @@ def create_order_object(orders: list = Form(...), ):
     return result.body
 
 @router.post("/get")
-def get_order_object(order_id: str = Form(...)):
+def get_order_object(access_token: Annotated[Union[str, None], Header()], order_id: str = Form(...)):
     """
     Get order object
     :param order_id:
     :return: Order Objects
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.orders.retrieve_order(
         order_id=order_id
     )
@@ -72,12 +73,13 @@ def get_order_object(order_id: str = Form(...)):
     return result.body
 
 @router.post("/pay")
-def pay_order_object(order_id: str = Form(...), payment_ids : list = Form(...)):
+def pay_order_object(access_token: Annotated[Union[str, None], Header()], order_id: str = Form(...), payment_ids : list = Form(...)):
     """
     Pay order object
     :param order_id:
     :return: Order Objects
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.orders.pay_order(
         order_id=order_id,
         body={

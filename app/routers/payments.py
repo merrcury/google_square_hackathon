@@ -1,10 +1,11 @@
 import uuid
 
 import logging
-from fastapi import APIRouter, Form, HTTPException
-from typing import Optional
+from fastapi import APIRouter, Form, HTTPException, Header
+from typing import Optional, Annotated, Union
 
 from ..settings.config import Config
+from ..utils.square_payments import get_square_connection
 
 # logger
 logging.basicConfig(level=logging.INFO)
@@ -12,12 +13,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 config = Config.get_instance()
-square_client, square_location_id = config.get_square_connection()
 
 # PAYMENT API
 # need to add multiple payment types based on source_id
 @router.post("/create")
-def create_payment(source_id: str = Form(...), amount: int = Form(...), currency: Optional[str] = Form(None),
+def create_payment(access_token: Annotated[Union[str, None], Header()], source_id: str = Form(...), amount: int = Form(...), currency: Optional[str] = Form(None),
                    tip: Optional[int] = Form(None) , customer_id: str = Form(...)):
     """
     Create a payment
@@ -28,6 +28,7 @@ def create_payment(source_id: str = Form(...), amount: int = Form(...), currency
     :param amount:
     :return: Payment Details
     """
+    square_client, square_location_id = get_square_connection(access_token)
     reference_id = str(uuid.uuid4())
     idempotency = str(uuid.uuid4())
     result = square_client.payments.create_payment(
@@ -57,12 +58,13 @@ def create_payment(source_id: str = Form(...), amount: int = Form(...), currency
 
 
 @router.post("/cancel")
-def cancel_payment_by_idempotency(idempotency_key: str = Form(...)):
+def cancel_payment_by_idempotency(access_token: Annotated[Union[str, None], Header()], idempotency_key: str = Form(...)):
     """
     Cancel a payment
     :param idempotency_key:
     :return: Status of the cancellation
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.payments.cancel_payment_by_idempotency_key(
         body={
             "idempotency_key": idempotency_key
@@ -78,12 +80,13 @@ def cancel_payment_by_idempotency(idempotency_key: str = Form(...)):
 
 
 @router.post("/get")
-def get_payment_by_id(payment_id: str = Form(...)):
+def get_payment_by_id(access_token: Annotated[Union[str, None], Header()], payment_id: str = Form(...)):
     """
     Get a payment
     :param payment_id:
     :return: Payment Details
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.payments.get_payment(
         payment_id=payment_id
     )
@@ -97,7 +100,7 @@ def get_payment_by_id(payment_id: str = Form(...)):
 
 
 @router.post("/update")
-def update_payment_by_id(payment_id: str = Form(...), amount: int = Form(...), currency: Optional[str] = Form(None),
+def update_payment_by_id(access_token: Annotated[Union[str, None], Header()], payment_id: str = Form(...), amount: int = Form(...), currency: Optional[str] = Form(None),
                          tip: Optional[int] = Form(None)):
     """
     Update a payment
@@ -107,6 +110,7 @@ def update_payment_by_id(payment_id: str = Form(...), amount: int = Form(...), c
     :param tip:
     :return: Updated Payment Details
     """
+    square_client, square_location_id = get_square_connection(access_token)
     idempotency = str(uuid.uuid4())
     result = square_client.payments.update_payment(
         payment_id=payment_id,
@@ -134,12 +138,13 @@ def update_payment_by_id(payment_id: str = Form(...), amount: int = Form(...), c
 
 
 @router.post("/complete")
-def complete_payment_by_id(payment_id: str = Form(...)):
+def complete_payment_by_id(access_token: Annotated[Union[str, None], Header()], payment_id: str = Form(...)):
     """
     Complete a payment
     :param payment_id:
     :return: Payment Details
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.payments.complete_payment(
         payment_id=payment_id,
         body={},

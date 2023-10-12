@@ -2,10 +2,12 @@ from fastapi import APIRouter
 import json
 import logging
 
-from fastapi import Form, HTTPException
+from fastapi import Form, HTTPException, Header
+from typing import Annotated, Union
 from langchain.prompts import PromptTemplate
 
 from ..settings.config import Config
+from ..utils.square_payments import get_square_connection
 
 # logger
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +18,6 @@ router = APIRouter()
 config = Config.get_instance()
 conn = config.get_postgres_connection()
 llm = config.get_vertex_ai_connection()
-square_client, square_location_id = config.get_square_connection()
 
 
 # Tools for Ingredients and Menu
@@ -42,12 +43,13 @@ def read_from_postgres():
         logger.exception(f"An Exception Occurred while reading from Postgres --> {e}")
 
 
-def read_menu_from_square_catalog():
+def read_menu_from_square_catalog(access_token):
     """
     Used to Read Menu from Square Catalog
     :return:
     """
     try:
+        square_client, square_location_id = get_square_connection(access_token)
         result = square_client.catalog.list_catalog(
             types=["ITEM"],  # DEFAULT MENU TYPE IS ITEM
         )
@@ -81,7 +83,7 @@ def summary(history):
 
 
 @router.post("/chat")
-def chat(message: str = Form(...), history: list = Form(...)):
+def chat(access_token: Annotated[Union[str, None], Header()], message: str = Form(...), history: list = Form(...)):
     """
     This function will chat with Vertex AI
     :param message:
@@ -101,7 +103,7 @@ def chat(message: str = Form(...), history: list = Form(...)):
     # Use tools for Ingredients and Menu
 
     ingredients = read_from_postgres()
-    menu = read_menu_from_square_catalog()
+    menu = read_menu_from_square_catalog(access_token)
 
     if "PAYMENT" in message or "Payment" in message or "payment" in message or "Pay" in message or "pay" in message:
         return {"response": "Please pay for your order", "history": history, "stop": True, "payment": True}

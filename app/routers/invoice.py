@@ -1,11 +1,12 @@
 import uuid
+import datetime
 
 import logging
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException
-from typing import Optional
+from fastapi import APIRouter, Form, HTTPException, Header
+from typing import Optional, Annotated, Union
 
 from ..settings.config import Config
-import datetime
+from ..utils.square_payments import get_square_connection
 
 # logger
 logging.basicConfig(level=logging.INFO)
@@ -13,10 +14,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 config = Config.get_instance()
-square_client, square_location_id = config.get_square_connection()
 
 @router.post("/create")
-def create_invoice_object( order_id: str = Form(...), first_name: Optional[str] = Form(None), last_name: Optional[str] = Form(None), email: Optional[str] = Form(None), phone_number: Optional[str] = Form(None), reference_id: Optional[str] = Form(None)):
+def create_invoice_object(access_token: Annotated[Union[str, None], Header()], order_id: str = Form(...), first_name: Optional[str] = Form(None), last_name: Optional[str] = Form(None), email: Optional[str] = Form(None), phone_number: Optional[str] = Form(None), reference_id: Optional[str] = Form(None)):
     """
     Create a new invoice object with price
     :param price:
@@ -28,6 +28,7 @@ def create_invoice_object( order_id: str = Form(...), first_name: Optional[str] 
     :param reference_id:
     :return: Result of the creation
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.invoice.create_invoice(
         body={
             "invoice": {
@@ -84,12 +85,13 @@ def create_invoice_object( order_id: str = Form(...), first_name: Optional[str] 
     return result.body
 
 @router.post("/delete")
-def delete_invoice_object(invoice_object_id: list = Form(...)):
+def delete_invoice_object(access_token: Annotated[Union[str, None], Header()], invoice_object_id: list = Form(...)):
     """
     Delete invoice object
     :param invoice_object_id:
     :return: Result of the deletion
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.invoice.delete_invoice(
         invoice_id=invoice_object_id
     )
@@ -103,12 +105,13 @@ def delete_invoice_object(invoice_object_id: list = Form(...)):
     return result.body
 
 @router.post("/search")
-def search_invoice_object(customer_id: str = Form(...)):
+def search_invoice_object(access_token: Annotated[Union[str, None], Header()], customer_id: str = Form(...)):
     """
     Search invoice objects
     :param customer_id:
     :return: Invoice Objects
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.invoices.search_invoices(
         body={
             "query": {
@@ -137,12 +140,13 @@ def search_invoice_object(customer_id: str = Form(...)):
     return result.body
 
 @router.post("/get")
-def get_invoice_object(invoice_id: str = Form(...)):
+def get_invoice_object(access_token: Annotated[Union[str, None], Header()], invoice_id: str = Form(...)):
     """
     Get invoice object
     :param invoice_id:
     :return: Invoice Objects
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.invoice.get_invoice(
         invoice_id=invoice_id
     )
@@ -156,12 +160,13 @@ def get_invoice_object(invoice_id: str = Form(...)):
     return result.body
 
 @router.post("/publish")
-def publish_invoice_object(invoice_id: str = Form(...)):
+def publish_invoice_object(access_token: Annotated[Union[str, None], Header()], invoice_id: str = Form(...)):
     """
     Publish invoice object
     :param invoice_id:
     :return: Invoice Objects
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.invoice.publish_invoice(
         invoice_id=invoice_id,
         body={
@@ -178,12 +183,13 @@ def publish_invoice_object(invoice_id: str = Form(...)):
     return result.body
 
 @router.post("/cancel")
-def cancel_invoice_object(invoice_id: str = Form(...), version: int = Form(...)):
+def cancel_invoice_object(access_token: Annotated[Union[str, None], Header()], invoice_id: str = Form(...), version: int = Form(...)):
     """
     Cancel invoice object
     :param invoice_id:
     :return: Invoice Objects
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.invoice.cancel_invoice(
         invoice_id=invoice_id,
         body={
@@ -199,12 +205,13 @@ def cancel_invoice_object(invoice_id: str = Form(...), version: int = Form(...))
     return result.body
 
 @router.post("/update")
-def update_invoice_object(invoice_id: str = Form(...), version: int = Form(...), first_name: Optional[str] = Form(None), last_name: Optional[str] = Form(None), email: Optional[str] = Form(None), phone_number: Optional[str] = Form(None), reference_id: Optional[str] = Form(None)):
+def update_invoice_object(access_token: Annotated[Union[str, None], Header()], invoice_id: str = Form(...), version: int = Form(...), first_name: Optional[str] = Form(None), last_name: Optional[str] = Form(None), email: Optional[str] = Form(None), phone_number: Optional[str] = Form(None), reference_id: Optional[str] = Form(None)):
     """
     Update invoice object
     :param invoice_id:
     :return: Invoice Objects
     """
+    square_client, square_location_id = get_square_connection(access_token)
     result = square_client.invoice.update_invoice(
         invoice_id=invoice_id,
         body={
