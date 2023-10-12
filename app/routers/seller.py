@@ -149,7 +149,7 @@ def get_ingredient_summary():
         TASK: Group up all Ingredients based on their name and type , sum up their quantity and provide a summary of the ingredients.
         ANSWER: Provide the key-value pairs without special chars ingredient_type1:ingredient_name1:quantity,ingredient_name2:quantity,ingredient_type2:ingredient_name1:quantity,ingredient_name2:quantity. For example: "Vegetables":"Tomato":10,"Potato":20,"Spices":"Salt":10,"Pepper":20
         CONSTRAINTS: Keep in mind the summary should be based on ingredient name and type.
-        In case of similar names like Tomato and Tomato Puree, group them together.
+        In case of similar names like Tomato and Tomato Puree, group them together, Add their Quantities, like Potato 500 gram, Potato 500 g, Potato 1kg,Potato  8 kilogram, group all and  sum them up like Potato: 10kg.
         """
 
         prompt = PromptTemplate.from_template(template)
