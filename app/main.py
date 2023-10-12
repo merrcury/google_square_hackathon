@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import seller, customer, payments, catalog, ingredient
+from .routers import seller, customer, payments, catalog, ingredient, invoice, order
 
 
 # logger
@@ -35,4 +35,6 @@ app.include_router(payments.router, prefix="/payments", tags=["payments"])
 app.include_router(customer.router, prefix="/customer", tags=["customer"])
 app.include_router(catalog.router, prefix="/catalog", tags=["catalog"])
 app.include_router(ingredient.router, prefix="/ingredients", tags=["ingredients"])
+app.include_router(invoice.router, prefix="/invoice", tags=["invoice"])
+app.include_router(order.router, prefix="/order", tags=["order"])
 
