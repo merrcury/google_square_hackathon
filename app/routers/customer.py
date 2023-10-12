@@ -9,6 +9,7 @@ from langchain.prompts import PromptTemplate
 from ..settings.config import Config
 from ..utils.square_payments import get_square_connection
 
+
 # logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,12 +32,13 @@ def read_from_postgres():
         ingredients = []
         logger.info(f"Reading from Postgres")
         cur = conn.cursor()
-        cur.execute("SELECT * FROM Ingredients")
+        cur.execute(""" SELECT * FROM "Ingredients" """)
         rows = cur.fetchall()
         logger.info(f"Read from Postgres")
         for row in rows:
-            ingredient = {'name': row[2], 'quantity': row[6], 'unit': row[7], 'shelf_life_days': row[5],
-                          'ingredient_type': row[3], 'ingredient_sub_type': row[4], 'unitprice': row[8]}
+            ingredient = {'name': row[2], 'quantity': row[6], 'unit': row[8], 'shelf_life_days': row[5],
+                          'ingredient_type': row[3], 'ingredient_sub_type': row[4], 'ingredient_id': row[0],
+                          'unitprice': row[7]}
             ingredients.append(ingredient)
         return ingredients
     except Exception as e:
@@ -165,28 +167,29 @@ def order_summarization(history: list = Form(...)):
         template = f"""
         CONTEXT: You are a AI agent, who is going to read a conversation between a customer and a customer service agent regarding order at a restaurant {history}. You need to summarize the order keeping all the important points regdarding order, serve, quantity, Customizations and price of dish from conversation intact in summary.
         TASK: Summarize the order from the conversation between customer and customer service agent, while maintaining the context and important information regdarding order, serve, quantity, Customizations and pricing of the conversation.
-        ANSWER: Just provide the summary of the order in JSON Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1, if there is no price use 5.
-         For example: {
-        "dishname1": {
+        ANSWER: Just provide the summary of the order in key-value pairs without special chars  Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1, if there is no price use 5.
+         For example: 
+        "dishname1": 
         "serve": "Amount",
                 "quantity": "Amount",
                 "customization": "Customization",
                 "price": "Amount"
-            }
-        }
+            
+        
         EXAMPLE:
-        {"Pizza": {
+        "Pizza": 
         "serve": "Large",
             "quantity": "1",
             "customization": "Extra Cheese, No Onion",
             "price": "10"
-        },
-        "Burger": {
+        ,
+        "Burger": 
         "serve": "Medium",
             "quantity": "2",
             "customization": None,
             "price": "5"
-        }}
+            
+        key-value pairs without special chars and spaces
         """
 
         prompt = PromptTemplate.from_template(template)
