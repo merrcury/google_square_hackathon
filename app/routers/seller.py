@@ -67,7 +67,10 @@ def recommend_menu(preferred_cuisine: str = Form(...), prep_time_breakfast: str 
      Task: Prepare a menu with multiple choices, atleast 15 each for Breakfast, Lunch, Dinner, Dessert, Drinks, Sides, Breads. Atleast 10 dishes for each category. You can customize the menu as per your requirement. Mention the Price with each dish
      Price calculation of 1 ingredient: Price of 1 ingredient is calculated as per the formula: Price = (Quantity * Unit Price)  Example use 2 potato for 1 serve of Aloprantha, cost of 1 potato is 10, then price of potato in 1 serve of Aloprantha is 20, similarly calculate for all ingredients
      Price Calculation of Dish: Price of the dish is calculated as per the formula: Price = (Sum of Price of all ingredients + 30% of Sum of Price of all ingredients + 5% of Sum of Price of all Ingredients) + 10% tax example if price of all ingredients  required to make Alo prantha is 100, then price of Alo prantha is 100 + 30 + 5 = 135 + 10% tax = 148.5
-     Answer: Provide the Menu in JSON key-value pairs without special chars  format "Course1":dish1:"Customization":option1,option2,"price":amount,dish2:"price":amount,"Course2":dish3:"price":amount,dish4:"price":amount along with customizations if any based on Ingredients. For example: "Breakfast":dish 1:Customization: custom1 ,price:x, dish2:price:y, "Lunch":dish3:price:z, dish4:price:z, "Dinner":dish5:price:z, dish6:price:z, "Dessert":dish7:price:z, dish8:price:z, "Drinks":dish9:price:z, dish10:price:z, "Sides":dish11:price:z, dish12:price:z, "Breads":dish13:price:z, dish14:price:z
+     Answer: Provide the Menu in JSON key-value pairs without special chars  format ("Course1":("dish1":("Customization":[option1,option2],"price":amount)),(dish2:("price":amount)),("Course2":(dish3:("price":amount)),(dish4:("price":amount)) along with customizations if any based on Ingredients. 
+     JUST COURSE NAME, DISH NAME, PRICE, CUSTOMIZATION, NO RECIPIE, NO INGREDIENTS
+     INSTRUCTION: Properly close all the brackets, include atleast 3 dishes each of breakfast, lunch dinner, dessert, drinks, sides, breads. 
+     Example: ("Breakfast":("Dosa":("Customization": ["No onion"] ,"price":10), "Prontha":("price":10)), "Lunch":("Shahi Paneer":("price":"", "Customization":[no onion]) , "Dal Makhni": ("price":10))), "Dinner":("Kadhai Paneer":("price":10), "Dal Tadka": ("price":10 , "Customization":[low spice, no onion])), "Dessert":("Gulab Jamun":("price":10), "Rasgulla":("price":10)), "Drinks":("Coke":("price":10), "Pepsi":("price":10)), "Sides":("Raita":("price":10), "Salad":("price":10)), "Breads":("Naan":("price":10), "Roti":("price":10)))
      Constraints: Keep in mind the menu should be {preferred_cuisine} menu and prepration time of breakfast menu should be less than equal to {prep_time_breakfast}, lunch menu should be less than equal to {prep_time_lunch}, dinner menu should be less than equal to {prep_time_dinner}, cook time of breakfast menu should be less than equal to {cook_time_breakfast}, cook time of lunch menu should be less than equal to {cook_time_lunch} and cook time of dinner menu should be less than equal to {cook_time_dinner}. Do include estimated Price of the dish in the menu.
      Definations: Prep time is the time taken to prepare the dish. Cook time is the time taken to cook the dish.
      """
@@ -183,7 +186,8 @@ def reengineer_dish(dish_name: str = Form(...), preferred_cuisine: str = Form(..
     """
     template = """ Context: You are a chef of a {preferred_cuisine} restaurant. You are given a dish that you need to reengineer. Please recommend some other dish, that has same ingredients as {dish_name}. You always have flour, water, spices, milk, curd, onion, tomato, ginger, garlic, oil, butter, ghee in your inventory,
         Task: Reengineer the dish with same ingredients. 
-        Answer: Provide the dish name. For example: Aalo Pranthe
+        Answer: Provide a single dish name and price only, no recipie. For example: Aalo Pranthe
+        EXAMPLE: ("Shahi Panner":30)
         Constraints: Keep in mind the dish should be {preferred_cuisine} dish and prepration and cook time of new and old dish should be similar.
         Definations: Prep time is the time taken to prepare the dish. Cook time is the time taken to cook the dish."""
     prompt = PromptTemplate.from_template(template)
