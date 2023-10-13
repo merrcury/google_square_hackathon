@@ -53,7 +53,7 @@ def read_menu_from_square_catalog(access_token):
     try:
         square_client, square_location_id = get_square_connection(access_token)
         result = square_client.catalog.list_catalog(
-            types=["ITEM"],  # DEFAULT MENU TYPE IS ITEM
+            types="ITEM",  # DEFAULT MENU TYPE IS ITEM
         )
         if result.is_success():
             return result.body
