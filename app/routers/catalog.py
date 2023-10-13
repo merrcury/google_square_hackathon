@@ -25,6 +25,7 @@ def create_catalog_object(access_token: Annotated[Union[str, None], Header()],  
     :return: Catalog Object Details including catalog_object_id
     """
     square_client, square_location_id = get_square_connection(access_token)
+    print(square_client, square_location_id)
     result = square_client.catalog.upsert_catalog_object(
         body={
             "idempotency_key": str(uuid.uuid4()),
@@ -33,10 +34,26 @@ def create_catalog_object(access_token: Annotated[Union[str, None], Header()],  
                 "id": "#" + name,
                 "item_data": {
                     "name": name,
-                    "description": price,
                     "abbreviation": name[0:3],
+                    "variations": [
+                        {
+                            "type": "ITEM_VARIATION",
+                            "id": "#" + name + "_variation",
+                            "item_data": {
+                                "name": name,
+                            },
+                            "item_variation_data": {
+                                "pricing_type": "FIXED_PRICING",
+                                "price_money": {
+                                    "amount": price,
+                                    "currency": "CAD"
+                                },
+                            "available_for_booking": False
+                            }
+                        }
+                    ]
+                },
 
-                }
 
             }
         }
@@ -73,17 +90,16 @@ def delete_catalog_object(access_token: Annotated[Union[str, None], Header()], c
 
 
 @router.post("/list")
-def list_catalog_objects(access_token: Annotated[Union[str, None], Header()], types: Optional[list] = Form(None)):
+def list_catalog_objects(access_token: Annotated[Union[str, None], Header()]):
     """
     List catalog objects
     :param types:
     :return: Catalog Objects
     """
     square_client, square_location_id = get_square_connection(access_token)
-    if types is None:
-        types = ["ITEM"]
+
     result = square_client.catalog.list_catalog(
-        types=types
+        types="ITEM"
     )
 
     if result.is_success():
@@ -103,6 +119,8 @@ def create_catalog_image(access_token: Annotated[Union[str, None], Header()], ca
     :param image:
     :return: Object data from Catalog
     """
+    if image.content_type != "image/jpeg":
+        raise HTTPException(status_code=400, detail="Only JPEG images are supported")
     square_client, square_location_id = get_square_connection(access_token)
     result = square_client.catalog.create_catalog_image(
         request={

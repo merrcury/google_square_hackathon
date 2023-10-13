@@ -7,6 +7,7 @@ from langchain.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain.chains import LLMChain
 
 from ..settings.config import Config
+from ..utils.clean import cleaned
 from typing import Optional
 
 
@@ -66,7 +67,7 @@ def recommend_menu(preferred_cuisine: str = Form(...), prep_time_breakfast: str 
      Task: Prepare a menu with multiple choices, atleast 15 each for Breakfast, Lunch, Dinner, Dessert, Drinks, Sides, Breads. Atleast 10 dishes for each category. You can customize the menu as per your requirement. Mention the Price with each dish
      Price calculation of 1 ingredient: Price of 1 ingredient is calculated as per the formula: Price = (Quantity * Unit Price)  Example use 2 potato for 1 serve of Aloprantha, cost of 1 potato is 10, then price of potato in 1 serve of Aloprantha is 20, similarly calculate for all ingredients
      Price Calculation of Dish: Price of the dish is calculated as per the formula: Price = (Sum of Price of all ingredients + 30% of Sum of Price of all ingredients + 5% of Sum of Price of all Ingredients) + 10% tax example if price of all ingredients  required to make Alo prantha is 100, then price of Alo prantha is 100 + 30 + 5 = 135 + 10% tax = 148.5
-     Answer: Provide the Menu in key-value pairs without special chars  format "Course1":dish1:"Customization":option1,option2,"price":amount,dish2:"price":amount,"Course2":dish3:"price":amount,dish4:"price":amount along with customizations if any based on Ingredients. For example: "Breakfast":Aalo Pranthe:Customization: Paneer, Gobi, No Onion,price:15, Poha:"price":10, Upma:"price":1, ....
+     Answer: Provide the Menu in JSON key-value pairs without special chars  format "Course1":dish1:"Customization":option1,option2,"price":amount,dish2:"price":amount,"Course2":dish3:"price":amount,dish4:"price":amount along with customizations if any based on Ingredients. For example: "Breakfast":Aalo Pranthe:Customization: Paneer, Gobi, No Onion,price:15, Poha:"price":10, Upma:"price":1, ....
      Constraints: Keep in mind the menu should be {preferred_cuisine} menu and prepration time of breakfast menu should be less than equal to {prep_time_breakfast}, lunch menu should be less than equal to {prep_time_lunch}, dinner menu should be less than equal to {prep_time_dinner}, cook time of breakfast menu should be less than equal to {cook_time_breakfast}, cook time of lunch menu should be less than equal to {cook_time_lunch} and cook time of dinner menu should be less than equal to {cook_time_dinner}. Do include estimated Price of the dish in the menu.
      Definations: Prep time is the time taken to prepare the dish. Cook time is the time taken to cook the dish.
      """
@@ -76,10 +77,11 @@ def recommend_menu(preferred_cuisine: str = Form(...), prep_time_breakfast: str 
 
     # Generate the menu
     try:
-        return chain.invoke({'preferred_cuisine': preferred_cuisine, 'ingredients': ingredients,
+        s =  chain.invoke({'preferred_cuisine': preferred_cuisine, 'ingredients': ingredients,
                              'prep_time_breakfast': prep_time_breakfast, 'prep_time_lunch': prep_time_lunch,
                              'prep_time_dinner': prep_time_dinner, 'cook_time_breakfast': cook_time_breakfast,
                              'cook_time_lunch': cook_time_lunch, 'cook_time_dinner': cook_time_dinner})
+        return(cleaned(s))
     except Exception as e:
         logger.exception(f"An Exception Occurred while generating menu using Vertex AI --> {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -147,7 +149,7 @@ def get_ingredient_summary():
         template = """ 
         CONTEXT: You are an AI bot provided with a list of ingredients {ingredients}. You need to sum up , group & summarize the list of ingredients.
         TASK: Group up all Ingredients based on their name and type , sum up their quantity and provide a summary of the ingredients.
-        ANSWER: Provide the key-value pairs without special chars ingredient_type1:ingredient_name1:quantity,ingredient_name2:quantity,ingredient_type2:ingredient_name1:quantity,ingredient_name2:quantity. For example: "Vegetables":"Tomato":10,"Potato":20,"Spices":"Salt":10,"Pepper":20
+        ANSWER: Provide the JSON key-value pairs without special chars ingredient_type1:ingredient_name1:quantity,ingredient_name2:quantity,ingredient_type2:ingredient_name1:quantity,ingredient_name2:quantity. For example: "Vegetables":"Tomato":10,"Potato":20,"Spices":"Salt":10,"Pepper":20
         CONSTRAINTS: Keep in mind the summary should be based on ingredient name and type.
         In case of similar names like Tomato and Tomato Puree, group them together, Add their Quantities, like Potato 500 gram, Potato 500 g, Potato 1kg,Potato  8 kilogram, group all and  sum them up like Potato: 10kg.
         """
@@ -157,7 +159,8 @@ def get_ingredient_summary():
 
         # Generate the summary
         try:
-            return chain.invoke({'ingredients': json.dumps(ingredients)})
+            s =  chain.invoke({'ingredients': json.dumps(ingredients)})
+            return(cleaned(s))
 
         except Exception as e:
             logger.exception(f"An Exception Occurred while generating summary using Vertex AI --> {e}")
