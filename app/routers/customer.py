@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 import json
 import logging
+import requests
 
 from fastapi import Form, HTTPException, Header
 from typing import Annotated, Union
@@ -50,17 +51,38 @@ def read_menu_from_square_catalog(access_token):
     Used to Read Menu from Square Catalog
     :return:
     """
-    try:
-        square_client, square_location_id = get_square_connection(access_token)
-        result = square_client.catalog.list_catalog(
-            types="ITEM",  # DEFAULT MENU TYPE IS ITEM
-        )
-        if result.is_success():
-            return result.body
-        elif result.is_error():
-            logger.error(f"Error Reading From Catalog{result.errors}")
-    except Exception as e:
-        logger.exception(f"An Exception Occurred while reading from Square --> {e}")
+
+    #     square_client, square_location_id = get_square_connection(access_token)
+    #     result = square_client.catalog.list_catalog(
+    #         types="ITEM",  # DEFAULT MENU TYPE IS ITEM
+    #     )
+    #     if result.is_success():
+    #         return result.body
+    #     elif result.is_error():
+    #         logger.error(f"Error Reading From Catalog{result.errors}")
+    # except Exception as e:
+    #     logger.exception(f"An Exception Occurred while reading from Square --> {e}")
+
+    url = "https://connect.squareupsandbox.com/v2/catalog/list"
+    headers = {
+        "Square-Version": "2023-09-25",
+        "Authorization": "Bearer " + access_token,
+        "Content-Type": "application/json"
+    }
+    data = {
+        "types": "ITEM"
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        logger.info(f"Read from Square")
+        return response.json()
+    elif response.status_code == 400:
+        logger.error(f"Error in reading from Square -->    {response.json()}")
+        raise HTTPException(status_code=500, detail=str(response.json()))
+
+
 
 def summary(history):
     """
