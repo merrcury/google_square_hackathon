@@ -4,6 +4,7 @@ import datetime
 import logging
 from fastapi import APIRouter, Form, HTTPException, Header
 from typing import Optional, Annotated, Union
+import requests
 
 from ..settings.config import Config
 from ..utils.square_payments import get_square_connection

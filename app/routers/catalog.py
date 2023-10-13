@@ -125,17 +125,14 @@ def delete_catalog_object(access_token: Annotated[Union[str, None], Header()], c
     #
     # return result.body
 
-    url = "https://connect.squareupsandbox.com/v2/catalog/object/{object_id}"
+    url = f"https://connect.squareupsandbox.com/v2/catalog/object/{catalog_object_id}"
     headers = {
         "Square-Version": "2023-09-25",
         "Authorization": "Bearer " + access_token,
         "Content-Type": "application/json"
     }
-    data = {
-        "object_id": catalog_object_id
-    }
 
-    response = requests.delete(url, headers=headers, json=data)
+    response = requests.delete(url, headers=headers)
 
     if response.status_code == 200:
         logger.info(f"Deleted Catalog Object {catalog_object_id}")
@@ -167,17 +164,15 @@ def list_catalog_objects(access_token: Annotated[Union[str, None], Header()]):
     #
     # return result.body
 
-    url = "https://connect.squareupsandbox.com/v2/catalog/list"
+    url = "https://connect.squareupsandbox.com/v2/catalog/list?types=ITEM"
     headers = {
         "Square-Version": "2023-09-25",
         "Authorization": "Bearer " + access_token,
         "Content-Type": "application/json"
     }
-    data = {
-        "types": "ITEM"
-    }
 
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.get(url, headers=headers)
+    print(response)
 
     if response.status_code == 200:
         logger.info(f"Listed Catalog Objects")
