@@ -63,17 +63,161 @@ def recommend_menu(preferred_cuisine: str = Form(...), prep_time_breakfast: str 
         raise HTTPException(status_code=500, detail=str(e))
 
     # Pass the list to Context and generate the menu
-    template = """ Context: You are a chef of a {preferred_cuisine} restaurant. You are planning to prepare a menu for the restaurant. Here is the list of ingredients you have in your kitchen: {ingredients}. Each ingredient has a unit price. Please prepare a {preferred_cuisine} menu for the restaurant. You always have flour, water, spices, milk, curd, onion, tomato, ginger, garlic, oil, butter, ghee in your inventory,
-     Task: Prepare a menu with multiple choices, atleast 15 each for Breakfast, Lunch, Dinner, Dessert, Drinks, Sides, Breads. Atleast 10 dishes for each category. You can customize the menu as per your requirement. Mention the Price with each dish
-     Price calculation of 1 ingredient: Price of 1 ingredient is calculated as per the formula: Price = (Quantity * Unit Price)  Example use 2 potato for 1 serve of Aloprantha, cost of 1 potato is 10, then price of potato in 1 serve of Aloprantha is 20, similarly calculate for all ingredients
-     Price Calculation of Dish: Price of the dish is calculated as per the formula: Price = (Sum of Price of all ingredients + 30% of Sum of Price of all ingredients + 5% of Sum of Price of all Ingredients) + 10% tax example if price of all ingredients  required to make Alo prantha is 100, then price of Alo prantha is 100 + 30 + 5 = 135 + 10% tax = 148.5
-     Answer: Provide the Menu in JSON key-value pairs without special chars  format ("Course1":("dish1":("Customization":[option1,option2],"price":amount)),(dish2:("price":amount)),("Course2":(dish3:("price":amount)),(dish4:("price":amount)) along with customizations if any based on Ingredients. 
-     JUST COURSE NAME, DISH NAME, PRICE, CUSTOMIZATION, NO RECIPIE, NO INGREDIENTS
-     INSTRUCTION: Properly close all the brackets, include atleast 3 dishes each of breakfast, lunch dinner, dessert, drinks, sides, breads. 
-     Example: ("Breakfast":("Dosa":("Customization": ["No onion"] ,"price":10), "Prontha":("price":10)), "Lunch":("Shahi Paneer":("price":"", "Customization":[no onion]) , "Dal Makhni": ("price":10))), "Dinner":("Kadhai Paneer":("price":10), "Dal Tadka": ("price":10 , "Customization":[low spice, no onion])), "Dessert":("Gulab Jamun":("price":10), "Rasgulla":("price":10)), "Drinks":("Coke":("price":10), "Pepsi":("price":10)), "Sides":("Raita":("price":10), "Salad":("price":10)), "Breads":("Naan":("price":10), "Roti":("price":10)))
-     Constraints: Keep in mind the menu should be {preferred_cuisine} menu and prepration time of breakfast menu should be less than equal to {prep_time_breakfast}, lunch menu should be less than equal to {prep_time_lunch}, dinner menu should be less than equal to {prep_time_dinner}, cook time of breakfast menu should be less than equal to {cook_time_breakfast}, cook time of lunch menu should be less than equal to {cook_time_lunch} and cook time of dinner menu should be less than equal to {cook_time_dinner}. Do include estimated Price of the dish in the menu.
-     Definations: Prep time is the time taken to prepare the dish. Cook time is the time taken to cook the dish.
-     """
+    template = """ 
+     **Context:**
+You are a chef at a {preferred_cuisine} restaurant. Your kitchen is stocked with essential ingredients such as flour, water, spices, milk, curd, onion, tomato, ginger, garlic, oil, butter, and ghee, each with its unit price. Your mission is to craft a menu for the restaurant that reflects your culinary style. 
+
+**Task:**
+Prepare a comprehensive menu featuring at least 15 dishes in each of the following categories: Breakfast, Lunch, Dinner, Dessert, Drinks, Sides, and Breads. For each category, there must be a minimum of 10 dishes. Additionally, ensure that the menu itemizes the price of each dish.
+
+**Price Calculation:**
+- The cost of one ingredient is determined using the formula: Price = (Quantity * Unit Price). For instance, if a dish requires 2 potatoes, and each potato costs 10, the price of potatoes for that dish is 20. This calculation applies to all ingredients.
+
+- The price of a dish is calculated using the formula: Price = (Sum of Price of all ingredients + 30% of the sum + 5% of the sum) + 10% tax. For example, if the total cost of all ingredients needed for a dish is 100, the price of the dish is 135 (100 + 30 + 5) + 10% tax, making it 148.5 in total.
+
+**Answer:**
+Provide the menu in JSON key-value (Keys are Course, Dish name, Customization & Price) pairs without special characters. This includes the course name, dish name, its price, and any customizations based on the ingredients. Ensure that there are at least 3 dishes for each category. Here's the output format:
+
+```
+(Breakfast: 
+  (Dish1: 
+    (Customization: ["Option1", "Option2"], 
+    Price: amount), 
+  Dish2: 
+    (Price: amount)), 
+(Lunch: 
+  (Dish3: 
+    (Price: amount, 
+    Customization: ["No onion"]), 
+  Dish4: 
+    (Price: amount)), 
+(Dinner: 
+  (Dish5: 
+    (Price: amount, 
+    Customization: ["Low spice", "No onion"]), 
+  Dish6: 
+    (Price: amount)), 
+(Dessert: 
+  (Dish7: 
+    (Price: amount), 
+  Dish8: 
+    (Price: amount)), 
+(Drinks: 
+  (Dish9: 
+    (Price: amount), 
+  Dish10: 
+    (Price: amount)), 
+(Sides: 
+  (Dish11: 
+    (Price: amount), 
+  Dish12: 
+    (Price: amount)), 
+(Breads: 
+  (Dish13: 
+    (Price: amount), 
+  Dish14: 
+    (Price: amount)))
+```
+
+**Example:**
+```
+(
+  "Breakfast": (
+    "Scrambled Eggs": (
+      "Customization": ["Cheese", "Bacon"],
+      "Price": 8.5
+    ),
+    "Pancakes": (
+      "Price": 7.0
+    ),
+    "Omelette": (
+      "Customization": ["Spinach", "Tomato"],
+      "Price": 9.0
+    )
+  ),
+  "Lunch": (
+    "Chicken Curry": (
+      "Price": 12.0,
+      "Customization": ["Spicy", "No Onion"]
+    ),
+    "Vegetable Biryani": (
+      "Price": 10.5
+    ),
+    "Grilled Cheese Sandwich": (
+      "Customization": ["Extra Cheese"],
+      "Price": 6.5
+    )
+  ),
+  "Dinner": (
+    "Steak": (
+      "Price": 18.0,
+      "Customization": ["Medium Rare", "No Onion"]
+    ),
+    "Salmon Fillet": (
+      "Price": 15.5
+    ),
+    "Pasta Carbonara": (
+      "Customization": ["Extra Bacon"],
+      "Price": 13.0
+    )
+  ),
+  "Dessert": (
+    "Chocolate Cake": (
+      "Price": 6.5
+    ),
+    "Tiramisu": (
+      "Price": 8.0
+    ),
+    "Fruit Salad": (
+      "Price": 5.0
+    )
+  ),
+  "Drinks": (
+    "Margarita": (
+      "Price": 9.0
+    ),
+    "Mojito": (
+      "Price": 7.5
+    ),
+    "Iced Tea": (
+      "Price": 3.5
+    )
+  ),
+  "Sides": (
+    "Garlic Bread": (
+      "Price": 4.0
+    ),
+    "French Fries": (
+      "Price": 4.0
+    ),
+    "Coleslaw": (
+      "Price": 3.0
+    )
+  ),
+  "Breads": (
+    "Garlic Naan": (
+      "Price": 2.5
+    ),
+    "Whole Wheat Roti": (
+      "Price": 2.0
+    ),
+    "Ciabatta": (
+      "Price": 2.0
+    )
+  )
+)
+
+```
+
+**Constraints:**
+- Ensure that the menu aligns with the {preferred_cuisine}.
+- Breakfast, lunch, and dinner preparation times must not exceed {prep_time_breakfast}, {prep_time_lunch}, and {prep_time_dinner} respectively.
+- Breakfast, lunch, and dinner cooking times should not surpass {cook_time_breakfast}, {cook_time_lunch}, and {cook_time_dinner} respectively.
+- Just output Course, Dish name, Customization & Price in the JSON key-value pairs. Do not include the recipe or ingredients.
+
+**Definitions:**
+- Prep time: The time taken to prepare the dish.
+- Cook time: The time taken to cook the dish. """
 
     prompt = PromptTemplate.from_template(template)
     chain = prompt | llm
