@@ -180,23 +180,12 @@ def create_invoice_object(access_token: Annotated[Union[str, None], Header()],lo
                 "scheduled_at": str(rfc3339_date),
                 "accepted_payment_methods": {
                     "card": True,
-                    "square_gift_card": True,
-                    "bank_account": True,
-                    "buy_now_pay_later": False,
-                    "cash_app_pay": True
                 },
-                "custom_fields": [
-                    {
-                        "label": reference_id or str(uuid.uuid4())[:8],
-                        "value": "REF #" + (reference_id or str(uuid.uuid4())),
-                        "placement": "ABOVE_LINE_ITEMS"
-                    }
-                ],
-                "store_payment_method_enabled": True,
         }
         }
 
     response = requests.post(url, headers=headers, json=data)
+    print(response)
 
     if response.status_code == 200:
         logger.info(f"Created Invoice Object {order_id}")
