@@ -228,7 +228,11 @@ Provide the menu in JSON key-value (Keys are Course, Dish name, Customization & 
                              'prep_time_breakfast': prep_time_breakfast, 'prep_time_lunch': prep_time_lunch,
                              'prep_time_dinner': prep_time_dinner, 'cook_time_breakfast': cook_time_breakfast,
                              'cook_time_lunch': cook_time_lunch, 'cook_time_dinner': cook_time_dinner})
-        return(cleaned(s))
+        try:
+            return json.loads(cleaned(s))
+        except Exception as e:
+            print(e)
+            return cleaned(s)
     except Exception as e:
         logger.exception(f"An Exception Occurred while generating menu using Vertex AI --> {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -307,7 +311,12 @@ def get_ingredient_summary():
         # Generate the summary
         try:
             s =  chain.invoke({'ingredients': json.dumps(ingredients)})
-            return(cleaned(s))
+            try:
+                return json.loads(cleaned(s))
+            except Exception as e:
+                print(e)
+                return cleaned(s)
+
 
         except Exception as e:
             logger.exception(f"An Exception Occurred while generating summary using Vertex AI --> {e}")
@@ -330,14 +339,19 @@ def reengineer_dish(dish_name: str = Form(...), preferred_cuisine: str = Form(..
     """
     template = """ Context: You are a chef of a {preferred_cuisine} restaurant. You are given a dish that you need to reengineer. Please recommend some other dish, that has same ingredients as {dish_name}. You always have flour, water, spices, milk, curd, onion, tomato, ginger, garlic, oil, butter, ghee in your inventory,
         Task: Reengineer the dish with same ingredients. 
-        Answer: Provide a single dish name and price only, no recipie. For example: Aalo Pranthe
-        EXAMPLE: ("Shahi Panner":30)
+        Answer: Provide a single dish name and price only in JSON, no recipie.
+        EXAMPLE: ("Dish": "Shahi Panner", "Price":30) in JSON
         Constraints: Keep in mind the dish should be {preferred_cuisine} dish and prepration and cook time of new and old dish should be similar.
         Definations: Prep time is the time taken to prepare the dish. Cook time is the time taken to cook the dish."""
     prompt = PromptTemplate.from_template(template)
     chain = prompt | llm
     try:
-        return chain.invoke({'dish_name': dish_name, 'preferred_cuisine': preferred_cuisine})
+        s = chain.invoke({'dish_name': dish_name, 'preferred_cuisine': preferred_cuisine})
+        try:
+            return json.loads(cleaned(s))
+        except Exception as e:
+            print(e)
+            return cleaned(s)
     except Exception as e:
         logger.exception(f"An Exception Occurred while reengineering dish using Vertex AI --> {e}")
         raise HTTPException(status_code=500, detail=str(e))
