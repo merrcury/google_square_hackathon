@@ -17,7 +17,7 @@ router = APIRouter()
 config = Config.get_instance()
 
 @router.post("/create")
-def create_order_object(access_token: Annotated[Union[str, None], Header()], location_id: Annotated[Union[str, None], Header()], orders: list = Form(...)):
+def create_order_object(access_token: Annotated[Union[str, None], Header()], location_id: Annotated[Union[str, None], Header()], orders: list = Form(...), customer_id: str = Form(...) ):
     """
     Create a new order object
     Comes from Order summary API
@@ -72,6 +72,7 @@ def create_order_object(access_token: Annotated[Union[str, None], Header()], loc
     data = {
         "order": {
             "location_id": location_id ,
+            "customer_id": customer_id,
             "reference_id": str(uuid.uuid4()),
             "line_items":
                 orders_post
