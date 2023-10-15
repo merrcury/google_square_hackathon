@@ -218,7 +218,9 @@ Provide the menu in JSON key-value (Keys are Course, Dish name, Customization & 
 
 **Definitions:**
 - Prep time: The time taken to prepare the dish.
-- Cook time: The time taken to cook the dish. """
+- Cook time: The time taken to cook the dish. 
+
+Just output Course, Dish name, Customization & Price in the JSON key-value pairs. Do not include the recipe or ingredients or code or any other text."""
 
     prompt = PromptTemplate.from_template(template)
     chain = prompt | chatbot_llm
@@ -327,7 +329,7 @@ def get_ingredient_summary():
 
         CONSTRAINTS: Keep in mind the summary should be based on ingredient name and type.
         In case of similar names like Tomato and Tomato Puree, group them together, Add their Quantities, like Potato 500 gram, Potato 500 g, Potato 1kg,Potato  8 kilogram, group all and  sum them up like Potato: 10kg.
-        Provide JSON only, no recipie, no code, no special chars.
+        Provide JSON only, no recipie, no code, no special chars, no extra text.
         """
 
         prompt = PromptTemplate.from_template(template)
