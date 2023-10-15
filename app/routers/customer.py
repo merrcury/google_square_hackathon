@@ -20,6 +20,7 @@ router = APIRouter()
 config = Config.get_instance()
 conn = config.get_postgres_connection()
 llm = config.get_vertex_ai_connection()
+openai_llm = config.get_openai_text_connection()
 
 
 # Tools for Ingredients and Menu
@@ -155,7 +156,7 @@ def chat(access_token: Annotated[Union[str, None], Header()], message: str = For
         EXAMPLE: If a customer orders a pizza with extra cheese and no onion, you can say: Your order will cost you 10$.
         """
         prompt = PromptTemplate.from_template(template)
-        chain = prompt | llm
+        chain = prompt | openai_llm
 
         try:
             response = str(chain.invoke(

@@ -19,6 +19,7 @@ config = Config.get_instance()
 conn = config.get_postgres_connection()
 llm = config.get_vertex_ai_connection()
 dalle_llm = config.get_open_ai_connection()
+chatbot_llm = config.get_openai_text_connection()
 
 router = APIRouter()
 
@@ -68,7 +69,7 @@ def recommend_menu(preferred_cuisine: str = Form(...), prep_time_breakfast: str 
 You are a chef at a {preferred_cuisine} restaurant. Your kitchen is stocked with essential ingredients such as flour, water, spices, milk, curd, onion, tomato, ginger, garlic, oil, butter, and ghee, each with its unit price. Your mission is to craft a menu for the restaurant that reflects your culinary style. 
 
 **Task:**
-Prepare a comprehensive menu featuring at least 15 dishes in each of the following categories: Breakfast, Lunch, Dinner, Dessert, Drinks, Sides, and Breads. For each category, there must be a minimum of 10 dishes. Additionally, ensure that the menu itemizes the price of each dish.
+Prepare a comprehensive menu featuring at least 25 dishes per categories: Breakfast, Lunch, Dinner, Dessert, Drinks, Sides, and Breads. For each category, there must be a minimum of 10 dishes. Additionally, ensure that the menu itemizes the price of each dish.
 
 **Price Calculation:**
 - The cost of one ingredient is determined using the formula: Price = (Quantity * Unit Price). For instance, if a dish requires 2 potatoes, and each potato costs 10, the price of potatoes for that dish is 20. This calculation applies to all ingredients.
@@ -220,7 +221,7 @@ Provide the menu in JSON key-value (Keys are Course, Dish name, Customization & 
 - Cook time: The time taken to cook the dish. """
 
     prompt = PromptTemplate.from_template(template)
-    chain = prompt | llm
+    chain = prompt | chatbot_llm
 
     # Generate the menu
     try:
@@ -330,7 +331,7 @@ def get_ingredient_summary():
         """
 
         prompt = PromptTemplate.from_template(template)
-        chain = prompt | llm
+        chain = prompt | chatbot_llm
 
         # Generate the summary
         try:

@@ -5,6 +5,7 @@ from square.client import Client
 from google.cloud import aiplatform
 from langchain.llms import VertexAI
 from langchain.llms import OpenAI
+from langchain.llms import OpenAIChat
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -74,6 +75,14 @@ class Config:
             return llm
         except Exception as e:
             raise Exception(f"An Exception Occurred while connecting to Vertex AI --> {e}")
+
+    def get_openai_text_connection(self):
+        try:
+            logger.info(f"Connecting to Open AI")
+            dalle_llm = OpenAIChat(max_tokens = 4000, temperature=0.3, model = 'gpt-4')
+            return dalle_llm
+        except Exception as e:
+            raise Exception(f"An Exception Occurred while connecting to Open AI --> {e}")
 
     def get_open_ai_connection(self):
         try:
