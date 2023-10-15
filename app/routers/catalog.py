@@ -1,4 +1,6 @@
 import uuid
+import os
+import json
 
 import logging
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Header
@@ -183,44 +185,33 @@ def list_catalog_objects(access_token: Annotated[Union[str, None], Header()]):
 
 
 @router.post("/create/image")
-def create_catalog_image(access_token: Annotated[Union[str, None], Header()], catalog_object_id: str = Form(...), image: UploadFile = File(...)):
+def create_catalog_image(access_token: Annotated[Union[str, None], Header()], catalog_object_id: str = Form(...), imageurl: str = Form(...), dishname: str = Form(...)):
     """
     Create a catalog image
     :param catalog_object_id:
     :param image:
     :return: Object data from Catalog
     """
-    if image.content_type != "image/jpeg":
-        raise HTTPException(status_code=400, detail="Only JPEG images are supported")
-    # square_client, square_location_id = get_square_connection(access_token)
-    # result = square_client.catalog.create_catalog_image(
-    #     request={
-    #         "idempotency_key": str(uuid.uuid4()),
-    #         "object_id": catalog_object_id,
-    #         "image": {
-    #             "type": "IMAGE",
-    #             "id": "#TEMP_ID",
-    #             "image_data": {
-    #                 "caption": "A picture of a cup of coffee"
-    #             }
-    #         }
-    #     },
-    #     file=image.file
-    # )
-    #
-    # if result.is_success():
-    #     logger.info(f"Created Catalog Image {catalog_object_id}")
-    # elif result.is_error():
-    #     logger.error(f"Error in creating catalog Image -->    {result.errors}")
-    #     raise HTTPException(status_code=500, detail=str(result.errors))
-    #
-    # return result.body
+
+    # if image.content_type != "image/jpeg":
+    #     raise HTTPException(status_code=400, detail="Only JPEG images are supported")
+
+
+    image = requests.get(imageurl)
+    if image.status_code != 200:
+        raise HTTPException(status_code=400, detail="Image URL is not valid")
+    else:
+        logger.info(f"Image URL is valid")
+        temp_image_file = "temp_image"+str(uuid.uuid4())+".jpg"
+        with open(temp_image_file, 'wb') as f:
+            f.write(image.content)
+        logger.info(f"Image downloaded")
+
 
     url = "https://connect.squareupsandbox.com/v2/catalog/images"
     headers = {
         "Square-Version": "2023-09-25",
-        "Authorization": "Bearer " + access_token,
-        "Content-Type": "application/json"
+        "Authorization": "Bearer " + access_token
     }
     data = {
         "idempotency_key": str(uuid.uuid4()),
@@ -229,16 +220,21 @@ def create_catalog_image(access_token: Annotated[Union[str, None], Header()], ca
             "type": "IMAGE",
             "id": "#TEMP_ID",
             "image_data": {
-                "caption": "A picture of a cup of coffee"
+                "caption": "A picture of a "+dishname,
             }
         }
     }
+    json_data = json.dumps(data, ensure_ascii=False).encode('utf-8')
 
-    files = {
-        "image": image.file
+
+    form_data = {
+        'json': (None, json_data, 'application/json'),
+        'image': (None, open(temp_image_file, 'rb'), 'image/jpeg'),  # Adjust the content type as needed
     }
 
-    response = requests.post(url, headers=headers, json=data, files=files)
+    response = requests.post(url, headers=headers,files=form_data)
+    #remove temp image file
+    os.remove(temp_image_file)
 
     if response.status_code == 200:
         logger.info(f"Created Catalog Image {catalog_object_id}")
