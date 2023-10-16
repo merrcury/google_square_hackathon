@@ -65,17 +65,14 @@ def read_menu_from_square_catalog(access_token):
     # except Exception as e:
     #     logger.exception(f"An Exception Occurred while reading from Square --> {e}")
 
-    url = "https://connect.squareupsandbox.com/v2/catalog/list"
+    url = "https://connect.squareupsandbox.com/v2/catalog/list?types=ITEM"
     headers = {
         "Square-Version": "2023-09-25",
         "Authorization": "Bearer " + access_token,
         "Content-Type": "application/json"
     }
-    data = {
-        "types": "ITEM"
-    }
 
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         logger.info(f"Read from Square")
@@ -130,6 +127,7 @@ def chat(access_token: Annotated[Union[str, None], Header()], message: str = For
 
     ingredients = read_from_postgres()
     menu = read_menu_from_square_catalog(access_token)
+    print(menu)
 
     if "PAYMENT" in message or "Payment" in message or "payment" in message or "Pay" in message or "pay" in message:
         return {"response": "Please pay for your order", "history": history, "stop": True, "payment": True}
