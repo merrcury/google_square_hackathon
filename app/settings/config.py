@@ -91,3 +91,11 @@ class Config:
             return dalle_llm
         except Exception as e:
             raise Exception(f"An Exception Occurred while connecting to Open AI --> {e}")
+
+    def get_openai_chat_connection(self):
+        try:
+            logger.info(f"Connecting to Open AI")
+            dalle_llm = OpenAIChat(max_tokens = 4000, temperature=0.3, model = 'gpt-3.5-turbo')
+            return dalle_llm
+        except Exception as e:
+            raise Exception(f"An Exception Occurred while connecting to Open AI --> {e}")
