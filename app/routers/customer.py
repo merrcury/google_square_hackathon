@@ -9,6 +9,7 @@ from langchain.prompts import PromptTemplate
 
 from ..settings.config import Config
 from ..utils.square_payments import get_square_connection
+from ..utils.clean import cleaned
 
 
 # logger
@@ -177,7 +178,7 @@ def chat(access_token: Annotated[Union[str, None], Header()], message: str = For
 
 
 @router.post("/order_summarization")
-def order_summarization(history: list = Form(...)):
+def order_summarization(history: str = Form(...)):
     """
     This function will summarize the order and redirect to Square Payment API
     :param history:
@@ -187,30 +188,15 @@ def order_summarization(history: list = Form(...)):
         raise HTTPException(status_code=500, detail=f"Order History is Empty")
     else:
 
-        template = f"""
+        template = """
         CONTEXT: You are a AI agent, who is going to read a conversation between a customer and a customer service agent regarding order at a restaurant {history}. You need to summarize the order keeping all the important points regdarding order, serve, quantity, Customizations and price of dish from conversation intact in summary.
         TASK: Summarize the order from the conversation between customer and customer service agent, while maintaining the context and important information regdarding order, serve, quantity, Customizations and pricing of the conversation.
-        ANSWER: Just provide the summary of the order in key-value pairs without special chars  Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1, if there is no price use 5.
+        ANSWER: Just provide the summary of the order in JSON, key-value pairs without special chars  Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1, if there is no price use 5.
          For example: 
-        "dishname1": 
-        "serve": "Amount",
-                "quantity": "Amount",
-                "customization": "Customization",
-                "price": "Amount"
-            
+         ("order":[("name": "Aalo prantha","quantity": "1", "base_price_money": ( "amount": 20,"currency": "CAD"),
+                   ("name": "Pizza","quantity": "2", "base_price_money": ( "amount": 30,"currency": "CAD"),]
+        )
         
-        EXAMPLE:
-        "Pizza": 
-        "serve": "Large",
-            "quantity": "1",
-            "customization": "Extra Cheese, No Onion",
-            "price": "10"
-        ,
-        "Burger": 
-        "serve": "Medium",
-            "quantity": "2",
-            "customization": None,
-            "price": "5"
             
         key-value pairs without special chars and spaces
         """
@@ -218,12 +204,16 @@ def order_summarization(history: list = Form(...)):
         prompt = PromptTemplate.from_template(template)
         chain = prompt | llm
         try:
-            order_summary = chain.invoke(json.dumps(history))
+            order_summary = chain.invoke({"history":history})
+            try:
+                order_summary = json.loads(cleaned(order_summary))
+            except:
+                order_summary = cleaned(order_summary)
         except Exception as e:
             logger.exception(f"An Exception Occurred while summarizing order --> {e}")
             raise HTTPException(status_code=500, detail=f"An Exception Occurred while summarizing order --> {e}")
 
-        return {"order_summary": order_summary}
+        return order_summary
 
 
 @router.post("/get_customers")
