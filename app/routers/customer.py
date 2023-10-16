@@ -1,3 +1,5 @@
+import time
+
 from fastapi import APIRouter
 import json
 import logging
@@ -22,6 +24,8 @@ config = Config.get_instance()
 conn = config.get_postgres_connection()
 llm = config.get_vertex_ai_connection()
 openai_llm = config.get_openai_text_connection()
+openai_llm_chat = config.get_openai_chat_connection()
+
 
 
 # Tools for Ingredients and Menu
@@ -118,8 +122,7 @@ def chat(access_token: Annotated[Union[str, None], Header()], message: str = For
     if history is None:
         history = []
 
-    if len(history) > 15:
-        history = summary(history)
+
 
     # Chat with Vertex AI
     # Need Buffer size check on history (Summarization may help)
@@ -127,7 +130,6 @@ def chat(access_token: Annotated[Union[str, None], Header()], message: str = For
 
     ingredients = read_from_postgres()
     menu = read_menu_from_square_catalog(access_token)
-    print(menu)
 
     if "PAYMENT" in message or "Payment" in message or "payment" in message or "Pay" in message or "pay" in message:
         return {"response": "Please pay for your order", "history": history, "stop": True, "payment": True}
@@ -153,9 +155,10 @@ def chat(access_token: Annotated[Union[str, None], Header()], message: str = For
         PRICING: Once a customer is done customising and finalizing the dish, estimate the price, based on Menu provided, serve size and quantity. Do not consider Individual Ingredient Price.
         Pricing Formula: Price = Dish Price * serve size * quantity so if unit price of pizza is 10$, 3 small pizza will be 10*3*1 = 30$, Large pizza is equivalent to 2 small pizza, so 1 large pizza will be 10*2*1 = 20$.
         EXAMPLE: If a customer orders a pizza with extra cheese and no onion, you can say: Your order will cost you 10$.
+        RESPONSE CONSTRAINT: DONT OUTPUT HISTORY OF CHAT, JUST OUTPUT RESPONSE TO CUSTOMER.
         """
         prompt = PromptTemplate.from_template(template)
-        chain = prompt | openai_llm
+        chain = prompt | openai_llm_chat
 
         try:
             response = str(chain.invoke(
