@@ -192,14 +192,14 @@ def order_summarization(history: str = Form(...)):
         template = """
         CONTEXT: You are a AI agent, who is going to read a conversation between a customer and a customer service agent regarding order at a restaurant {history}. You need to summarize the order keeping all the important points regdarding order, serve, quantity, Customizations and price of dish from conversation intact in summary.
         TASK: Summarize the order from the conversation between customer and customer service agent, while maintaining the context and important information regdarding order, serve, quantity, Customizations and pricing of the conversation.
-        ANSWER: Just provide the summary of the order in JSON, key-value pairs without special chars  Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1, if there is no price use 5.
+        ANSWER: Just provide the summary of the order in JSON, key-value pairs without special chars  Format. If there is no customization, use None, if there is a dish but no serve, use Medium and if there is no Quantity, use 1, if there is no price use 5. Currency is always "CAD"
          For example: 
          ("order":[("name": "Aalo prantha","quantity": "1", "base_price_money": ( "amount": 20,"currency": "CAD"),
                    ("name": "Pizza","quantity": "2", "base_price_money": ( "amount": 30,"currency": "CAD"),]
         )
         
             
-        key-value pairs without special chars and spaces
+        JUST OUTPUT ORDER SUMMARY IN JSON FORMAT, only Key-value pairs without special chars and spaces
         """
 
         prompt = PromptTemplate.from_template(template)

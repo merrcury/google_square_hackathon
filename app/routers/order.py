@@ -86,7 +86,7 @@ def create_order_object(access_token: Annotated[Union[str, None], Header()], loc
                 }
             ],
         },
-        "idempotency_key": "8193148c-9586-11e6-99f9-28cfe92138cf"
+        "idempotency_key": str(uuid.uuid4())
     }
 
     response = requests.post(url, headers=headers, json=data)
