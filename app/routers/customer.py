@@ -143,7 +143,7 @@ def chat(access_token: Annotated[Union[str, None], Header()], message: str = For
         Order: Ask Customer for Dish from Menu, Serve Size, Customization for all orders
         Answer: Just provide the response to the customer. For example: Hi, I am sorry for the inconvenience. I will check with the chef and get back to you.
         Menu includes {menu} along with dish price
-        Ingredients include {ingredients} 
+        Ingredients for customization include {ingredients} 
         Not in Menu: If Customer asks for something not in Menu, say that it is not available.
         Customization: You can customize the menu as per customer requirement, keeping in Mind the Ingredients. For example: I want to order a pizza with extra cheese and no onion. 
         No Customization: If no customization is possible due to lack of Ingredients, just say that customization is not possible.
@@ -224,3 +224,50 @@ def order_summarization(history: list = Form(...)):
             raise HTTPException(status_code=500, detail=f"An Exception Occurred while summarizing order --> {e}")
 
         return {"order_summary": order_summary}
+
+
+@router.post("/get_customers")
+def get_customers(access_token: Annotated[Union[str, None], Header()], customer_id: str = Form(...)):
+    """
+    This function will get customer details from Square
+    :param customer_id:
+    :return: customer details
+    """
+    url = f"https://connect.squareup.com/v2/customers/{customer_id}"
+    headers = {
+        "Square-Version": "2023-09-25",
+        "Authorization": "Bearer " + access_token,
+        "Content-Type": "application/json"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        logger.info(f"Read from Square")
+        return response.json()
+    elif response.status_code == 400:
+        logger.error(f"Error in reading from Square -->    {response.json()}")
+        raise HTTPException(status_code=500, detail=str(response.json()))
+
+@router.post("/list_customers")
+def list_customers(access_token: Annotated[Union[str, None], Header()]):
+    """
+    This function will list all customers from Square
+    :param customer_id:
+    :return: customer details
+    """
+    url = f"https://connect.squareup.com/v2/customers"
+    headers = {
+        "Square-Version": "2023-09-25",
+        "Authorization": "Bearer " + access_token,
+        "Content-Type": "application/json"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        logger.info(f"Read from Square")
+        return response.json()
+    elif response.status_code == 400:
+        logger.error(f"Error in reading from Square -->    {response.json()}")
+        raise HTTPException(status_code=500, detail=str(response.json()))
