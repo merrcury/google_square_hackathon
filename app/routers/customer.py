@@ -233,7 +233,7 @@ def get_customers(access_token: Annotated[Union[str, None], Header()], customer_
     :param customer_id:
     :return: customer details
     """
-    url = f"https://connect.squareup.com/v2/customers/{customer_id}"
+    url = f"https://connect.squareupsandbox.com/v2/customers/{customer_id}"
     headers = {
         "Square-Version": "2023-09-25",
         "Authorization": "Bearer " + access_token,
@@ -256,7 +256,7 @@ def list_customers(access_token: Annotated[Union[str, None], Header()]):
     :param customer_id:
     :return: customer details
     """
-    url = f"https://connect.squareup.com/v2/customers"
+    url = "https://connect.squareupsandbox.com/v2/customers"
     headers = {
         "Square-Version": "2023-09-25",
         "Authorization": "Bearer " + access_token,
@@ -264,6 +264,7 @@ def list_customers(access_token: Annotated[Union[str, None], Header()]):
     }
 
     response = requests.get(url, headers=headers)
+    print(response)
 
     if response.status_code == 200:
         logger.info(f"Read from Square")

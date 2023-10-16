@@ -60,6 +60,7 @@ def create_customer(access_token: Annotated[Union[str, None], Header()], first_n
     }
 
     response = requests.post(url, headers=headers, json=data)
+    print(response)
 
     if response.status_code == 200:
         logger.info(f"Created Customer Object {first_name} {last_name}")
